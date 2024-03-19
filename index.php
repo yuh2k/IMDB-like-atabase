@@ -67,6 +67,29 @@
                 <button class="btn btn-primary" type="submit" name="search_age_awards">Find Youngest and Oldest Award-Winning Actors</button>
             </div>
 
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" type="submit" name="search_producers">Search Producers</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <input type="number" name="box_office" placeholder="Enter Minimum Box Office Collection" class="form-control">
+            </div>
+            <div style="margin-top: 20px;">
+                <input type="number" name="budget_limit" placeholder="Enter Maximum Budget" class="form-control">
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" type="submit" name="search_multiple_roles">Search People with Multiple Roles</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <input type="number" name="rating_threshold" placeholder="Enter Rating Threshold" step="0.1" class="form-control">
+            </div>
+
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" type="submit" name="top2_thriller_movies">Find Top 2 Thriller Movies in Boston</button>
+            </div>
+            
+
 
         </form>
         <div class="mt-3">
@@ -119,6 +142,8 @@
                         echo "<th>Award Year</th>";
                         echo "<th>Award Count</th>";
                     } 
+
+                    
                     else {
 
                     }
@@ -142,8 +167,7 @@
                         $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
                         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-                        if(isset($_POST['view_movies']))
-                        {
+                        if(isset($_POST['view_movies'])){
                             $stmt = $conn->prepare("
                             SELECT mp.id, mp.name, mp.rating, mp.production, mp.budget, 
                             GROUP_CONCAT(DISTINCT a.award_name SEPARATOR ', ') AS awards,
@@ -174,8 +198,7 @@
                                 </tr>";
                             }
                         }
-                        else if (isset($_POST['view_actors']))
-                        {
+                        else if (isset($_POST['view_actors'])){
                             $stmt = $conn->prepare("SELECT p.name, p.nationality, p.dob, p.gender FROM people p JOIN Role r ON p.id = r.pid WHERE role_name = 'Actor'"); 
                             $stmt->execute();
     
@@ -328,7 +351,6 @@
                             }
                         }
                         else if (isset($_POST['search_age_awards'])) {
-                            // 查询最年轻的获奖演员
                             $stmtYoungest = $conn->prepare("
                                 SELECT pe.name AS ActorName, mp.name AS MotionPictureName,
                                 (a.award_year - YEAR(pe.dob)) AS AgeAtAward
@@ -342,7 +364,6 @@
                             $stmtYoungest->execute();
                             $youngest = $stmtYoungest->fetch(PDO::FETCH_ASSOC);
                         
-                            // 查询最年长的获奖演员
                             $stmtOldest = $conn->prepare("
                                 SELECT pe.name AS ActorName, a.award_year AS AwardYear,
                                 (a.award_year - YEAR(pe.dob)) AS AgeAtAward
@@ -356,7 +377,6 @@
                             $stmtOldest->execute();
                             $oldest = $stmtOldest->fetch(PDO::FETCH_ASSOC);
                         
-                            // 显示结果
                             echo "<h2>Youngest Award-Winning Actor</h2>";
                             echo "<table class='table table-bordered'>
                                 <thead class='thead-dark'><tr>
@@ -383,8 +403,135 @@
                                 </tr>";
                             echo "</tbody></table>";
                         }
+                        else if (isset($_POST['search_producers'])) {
+                            $boxOffice = $_POST['box_office'];
+                            $budgetLimit = $_POST['budget_limit'];
                         
+                            $stmt = $conn->prepare("
+                                SELECT 
+                                    p.name AS ProducerName, 
+                                    mp.name AS MovieName, 
+                                    m.boxoffice_collection, 
+                                    mp.budget
+                                FROM 
+                                    People p
+                                JOIN 
+                                    Role r ON p.id = r.pid AND r.role_name = 'Producer'
+                                JOIN 
+                                    MotionPicture mp ON r.mpid = mp.id
+                                JOIN 
+                                    Movie m ON mp.id = m.id
+                                WHERE 
+                                    p.nationality = 'USA' AND
+                                    m.boxoffice_collection >= :boxOffice AND 
+                                    mp.budget <= :budgetLimit
+                            ");
                         
+                            $stmt->bindParam(':boxOffice', $boxOffice, PDO::PARAM_INT);
+                            $stmt->bindParam(':budgetLimit', $budgetLimit, PDO::PARAM_INT);
+                            $stmt->execute();
+                            
+                            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            if ($result) {
+                                echo "<h2>Search Results</h2>";
+                                echo "<table class='table table-bordered'><thead class='thead-dark'><tr><th>Producer Name</th><th>Movie Name</th><th>Box Office Collection</th><th>Budget</th></tr></thead>";
+                                echo "<tbody>";
+                                foreach($result as $row) {
+                                    echo "<tr><td>".$row["ProducerName"]."</td><td>".$row["MovieName"]."</td><td>".$row["boxoffice_collection"]."</td><td>".$row["budget"]."</td></tr>";
+                                }
+                                echo "</tbody></table>";
+                            } else {
+                                echo "<p>No results found matching your criteria.</p>";
+                            }
+                        }
+                        else if (isset($_POST['search_multiple_roles'])) {
+                            $ratingThreshold = $_POST['rating_threshold'];
+                        
+                            $stmt = $conn->prepare("
+                                SELECT 
+                                    p.name AS PersonName, 
+                                    mp.name AS MotionPictureName, 
+                                    COUNT(r.role_name) AS RoleCount
+                                FROM 
+                                    People p
+                                JOIN 
+                                    Role r ON p.id = r.pid
+                                JOIN 
+                                    MotionPicture mp ON r.mpid = mp.id
+                                WHERE 
+                                    mp.rating > :ratingThreshold
+                                GROUP BY 
+                                    p.id, mp.id
+                                HAVING 
+                                    COUNT(r.role_name) > 1
+                            ");
+                        
+                            $stmt->bindParam(':ratingThreshold', $ratingThreshold, PDO::PARAM_STR);
+                            $stmt->execute();
+                            
+                            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            if ($result) {
+                                echo "<h2>People with Multiple Roles in High-Rated Motion Pictures</h2>";
+                                echo "<table class='table table-bordered'><thead class='thead-dark'><tr><th>Person's Name</th><th>Motion Picture Name</th><th>Count of Roles</th></tr></thead>";
+                                echo "<tbody>";
+                                foreach($result as $row) {
+                                    echo "<tr><td>".$row["PersonName"]."</td><td>".$row["MotionPictureName"]."</td><td>".$row["RoleCount"]."</td></tr>";
+                                }
+                                echo "</tbody></table>";
+                            } else {
+                                echo "<p>No results found matching your criteria.</p>";
+                            }
+                        }
+                        else if (isset($_POST['top2_thriller_movies'])) {
+                            $stmt = $conn->prepare("
+                            SELECT 
+                                mp.name AS MovieName, 
+                                mp.rating AS Rating
+                            FROM 
+                                MotionPicture mp
+                            JOIN 
+                                Genre g ON mp.id = g.mpid
+                            JOIN 
+                                Location l ON mp.id = l.mpid
+                            WHERE 
+                                g.genre_name = 'Thriller' AND 
+                                l.city = 'Boston' AND 
+                                mp.id NOT IN (
+                                    SELECT 
+                                        mp.id
+                                    FROM 
+                                        MotionPicture mp
+                                    JOIN 
+                                        Location l ON mp.id = l.mpid
+                                    WHERE 
+                                        l.city <> 'Boston'
+                                )
+                            GROUP BY 
+                                mp.id
+                            ORDER BY 
+                                mp.rating DESC
+                            LIMIT 2
+                        ");
+                        $stmt->execute();
+    
+                        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+                        if ($result) {
+                            echo "<h2>Top 2 Rated Thriller Movies Shot Exclusively in Boston</h2>";
+                            echo "<table class='table table-bordered'><thead class='thead-dark'><tr><th>Movie Name</th><th>Rating</th></tr></thead>";
+                            echo "<tbody>";
+                            foreach($result as $row) {
+                                echo "<tr><td>".$row["MovieName"]."</td><td>".$row["Rating"]."</td></tr>";
+                            }
+                            echo "</tbody></table>";
+                        } else {
+                            echo "<p>No thriller movies found that were shot exclusively in Boston.</p>";
+                        }
+    
+                        }
+                        
+                
                         
                         else {
 
