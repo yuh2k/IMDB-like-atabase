@@ -13,6 +13,8 @@
     <header class="site-header">
         <img src="static/images/imdb.png" alt="IMDB Logo" class="logo">
         <h1><b>MY <i>IMDb</i></b></h1>
+        <br>
+        
     </header>
 
         <div class="row">
@@ -46,29 +48,36 @@
                         </div>
                     </div>
                 </div>
-
-
-
-
-
-
-
-
-
-                    <div>
-                        <button class="btn btn-primary" type="submit" name="search_by_country">Search by Country</button>
+                <div class="card">
+                    <div class="card-body">
+                        <div>
+                            <input type="text" name="location_country" placeholder="Enter Shooting Location Country" class="form-control">
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" type="submit" name="search_by_country">Search by Country</button>
+                        </div>
                     </div>
-                    <div>
-                        <input type="text" name="location_country" placeholder="Enter Shooting Location Country" class="form-control">
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div>
+                            <input type="text" name="zip_code" placeholder="Enter Zip Code" class="form-control">
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" type="submit" name="search_directors">Search Directors</button>
+                        </div>
                     </div>
+                </div>
 
 
-                    <div>
-                        <button class="btn btn-primary" type="submit" name="search_directors">Search Directors</button>
-                    </div>
-                    <div>
-                        <input type="text" name="zip_code" placeholder="Enter Zip Code" class="form-control">
-                    </div>
+
+
+
+
+
+
+
+
 
 
                     <div>
@@ -173,7 +182,7 @@
 
                             
                             else {
-
+                                
                             }
                             
                             ?>
