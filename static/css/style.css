@@ -1,0 +1,45 @@
+.btn {
+    width: 100%; 
+    white-space: normal;
+    padding: 3%;
+    background-color: rgb(83, 163, 182);
+}
+
+body {
+    background-image: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto; 
+}
+
+.card-body {
+    margin: 0;
+    padding: 2%; 
+}
+
+.card {
+    margin-bottom: 10px; 
+}
+
+.site-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 0;
+}
+
+.logo {
+    height: 100px; 
+    width: auto; 
+    background-color: red; /* For browsers that do not support gradients */
+    background-image: linear-gradient(to right, red, orange, yellow, rgb(87, 190, 87), rgb(107, 107, 186), rgb(189, 153, 214), violet);
+}
+
+.site-header h1 {
+    margin: 0;
+    font-family:monospace;
+    font-size: 48px; 
+    color: #333; 
+}
+
