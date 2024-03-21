@@ -68,78 +68,92 @@
                         </div>
                     </div>
                 </div>
-
-
-
-
-
-
-
-
-
-
-
-
+                <div class="card">
+                    <div class="card-body">
+                        <div>
+                            <input type="number" name="award_count" placeholder="Enter Minimum Award Count" class="form-control" min="1">
+                        </div>
+                    </div>
                     <div>
                         <button class="btn btn-primary" type="submit" name="search_award_winners">Search Award Winners</button>
                     </div>
-                    <div>
-                        <input type="number" name="award_count" placeholder="Enter Minimum Award Count" class="form-control" min="1">
-                    </div>
+                </div>
 
+                <div class="card">
                     <div>
                         <button class="btn btn-primary" type="submit" name="search_age_awards">Find Youngest and Oldest Award-Winning Actors</button>
                     </div>
+                </div>
 
-                    <div>
-                        <button class="btn btn-primary" type="submit" name="search_producers">Search Producers</button>
-                    </div>
+                <div class="card">
                     <div>
                         <input type="number" name="box_office" placeholder="Enter Minimum Box Office Collection" class="form-control">
                     </div>
                     <div>
                         <input type="number" name="budget_limit" placeholder="Enter Maximum Budget" class="form-control">
                     </div>
+                    <div>
+                        <button class="btn btn-primary" type="submit" name="search_producers">Search Producers</button>
+                    </div>
+                </div>
+
+                <div class="card">
 
                     <div>
                         <button class="btn btn-primary" type="submit" name="search_multiple_roles">Search People with Multiple Roles</button>
                     </div>
+                </div>
+
+                <div class="card">
                     <div>
                         <input type="number" name="rating_threshold" placeholder="Enter Rating Threshold" step="0.1" class="form-control">
                     </div>
+                    <div>
+                        <button class="btn btn-primary" type="submit" name="search_multiple_roles">Search People with Multiple Roles</button>
+                    </div>
+                </div>
 
-
+                <div class="card">
                     <div>
                         <button class="btn btn-primary" type="submit" name="top2_thriller_movies">Find Top 2 Thriller Movies in Boston</button>
                     </div>
+                </div>
                     
-
-                    <div>
-                        <button class="btn btn-primary" type="submit" name="search_movies_by_likes">Search Movies</button>
-                    </div>
+                <div class="card">
                     <div>
                         <input type="number" name="likes_threshold" placeholder="Enter Minimum Number of Likes" class="form-control">
                     </div>
                     <div>
                         <input type="number" name="age_limit" placeholder="Enter Maximum Age" class="form-control">
                     </div>
+                    <div>
+                        <button class="btn btn-primary" type="submit" name="search_movies_by_likes">Search Movies</button>
+                    </div>
+                </div>
 
-
+                <div class="card">
                     <div>
                         <button class="btn btn-primary" type="submit" name="search_marvel_warner">Search Actors in Both Marvel and Warner Bros Productions</button>
                     </div>
+                </div>
 
+                <div class="card">
                     <div>
                         <button class="btn btn-primary" type="submit" name="search_higher_than_comedy_avg">Movies Rated Higher Than Comedy Average</button>
                     </div>
+                </div>
 
+                <div class="card">
                     <div>
                         <button class="btn btn-primary" type="submit" name="search_top_movies_by_roles">Top 5 Movies by Role Participation</button>
                     </div>
-                    
+                </div>
+
+                <div class="card">
                     <div>
                         <button class="btn btn-primary" type="submit" name="search_actors_with_same_birthday">Find Actors with the Same Birthday</button>
                     </div>
+                </div>
                 </form>
             </div>
             <div class="col-md-8">
