@@ -233,7 +233,8 @@
                         
                             $stmt = $conn->prepare("
                                 SELECT mp.name, mp.rating, mp.production, mp.budget
-                                FROM motionPicture mp
+                                FROM MotionPicture mp
+                                JOIN Movie m ON mp.id = m.id
                                 WHERE mp.name LIKE :searchText
                             ");
                         
@@ -255,8 +256,9 @@
                         
                             $stmt = $conn->prepare("
                                 SELECT mp.name, mp.rating, mp.production, mp.budget
-                                FROM motionPicture mp
-                                JOIN likes l ON mp.id = l.mpid
+                                FROM MotionPicture mp
+                                JOIN Movie m ON mp.id = m.id
+                                JOIN Likes l ON mp.id = l.mpid
                                 WHERE l.uemail = :userEmail
                             ");
                         
