@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="static/css/style.css">
     <meta charset="UTF-8">
@@ -157,7 +156,6 @@
                 </form>
             </div>
             <div class="col-md-8">
-                <!-- Table display area -->
                 <div class="table-responsive mt-3">
                     <table class='table table-bordered'>
                         <thead class='thead-dark'>
@@ -196,7 +194,7 @@
 
                             
                             else {
-                                
+                                // Leave blank for no clicking anything
                             }
                             
                             ?>
@@ -233,7 +231,8 @@
                         
                             $stmt = $conn->prepare("
                                 SELECT mp.name, mp.rating, mp.production, mp.budget
-                                FROM motionPicture mp
+                                FROM MotionPicture mp
+                                JOIN Movie m ON mp.id = m.id
                                 WHERE mp.name LIKE :searchText
                             ");
                         
@@ -255,8 +254,9 @@
                         
                             $stmt = $conn->prepare("
                                 SELECT mp.name, mp.rating, mp.production, mp.budget
-                                FROM motionPicture mp
-                                JOIN likes l ON mp.id = l.mpid
+                                FROM MotionPicture mp
+                                JOIN Movie m ON mp.id = m.id
+                                JOIN Likes l ON mp.id = l.mpid
                                 WHERE l.uemail = :userEmail
                             ");
                         
@@ -355,28 +355,45 @@
                         }
                         else if (isset($_POST['search_age_awards'])) {
                             $stmtYoungest = $conn->prepare("
-                                SELECT pe.name AS ActorName, mp.name AS MotionPictureName,
-                                (a.award_year - YEAR(pe.dob)) AS AgeAtAward
-                                FROM People pe
-                                INNER JOIN Role r ON pe.id = r.pid AND r.role_name = 'Actor'
-                                INNER JOIN Award a ON pe.id = a.pid
-                                INNER JOIN MotionPicture mp ON a.mpid = mp.id
-                                ORDER BY AgeAtAward ASC
-                                LIMIT 1
+                                SELECT 
+                                    pe.name AS ActorName, 
+                                    mp.name AS MotionPictureName, 
+                                    pe.dob AS DateOfBirth,
+                                    TIMESTAMPDIFF(YEAR, pe.dob, CONCAT(a.award_year, '-01-01')) AS AgeAtAward
+                                FROM 
+                                    People pe
+                                INNER JOIN 
+                                    Role r ON pe.id = r.pid AND r.role_name = 'Actor'
+                                INNER JOIN 
+                                    Award a ON pe.id = a.pid
+                                INNER JOIN 
+                                    MotionPicture mp ON a.mpid = mp.id
+                                ORDER BY 
+                                    AgeAtAward ASC, pe.dob ASC
+                                LIMIT 1;
                             ");
                             $stmtYoungest->execute();
                             $youngest = $stmtYoungest->fetch(PDO::FETCH_ASSOC);
                         
                             $stmtOldest = $conn->prepare("
-                                SELECT pe.name AS ActorName, a.award_year AS AwardYear,
-                                (a.award_year - YEAR(pe.dob)) AS AgeAtAward
-                                FROM People pe
-                                INNER JOIN Role r ON pe.id = r.pid AND r.role_name = 'Actor'
-                                INNER JOIN Award a ON pe.id = a.pid
-                                INNER JOIN MotionPicture mp ON a.mpid = mp.id
-                                ORDER BY AgeAtAward DESC
+                                SELECT 
+                                    pe.name AS ActorName, 
+                                    mp.name AS MotionPictureName, 
+                                    pe.dob AS DateOfBirth,
+                                    TIMESTAMPDIFF(YEAR, pe.dob, CONCAT(a.award_year, '-01-01')) AS AgeAtAward
+                                FROM 
+                                    People pe
+                                INNER JOIN 
+                                    Role r ON pe.id = r.pid AND r.role_name = 'Actor'
+                                INNER JOIN 
+                                    Award a ON pe.id = a.pid
+                                INNER JOIN 
+                                    MotionPicture mp ON a.mpid = mp.id
+                                ORDER BY 
+                                    AgeAtAward DESC, pe.dob DESC
                                 LIMIT 1
                             ");
+                        
                             $stmtOldest->execute();
                             $oldest = $stmtOldest->fetch(PDO::FETCH_ASSOC);
                         
@@ -488,38 +505,35 @@
                         }
                         else if (isset($_POST['top2_thriller_movies'])) {
                             $stmt = $conn->prepare("
-                            SELECT 
-                                mp.name AS MovieName, 
-                                mp.rating AS Rating
-                            FROM 
-                                MotionPicture mp
-                            JOIN 
-                                Genre g ON mp.id = g.mpid
-                            JOIN 
-                                Location l ON mp.id = l.mpid
-                            WHERE 
-                                g.genre_name = 'Thriller' AND 
-                                l.city = 'Boston' AND 
-                                mp.id NOT IN (
-                                    SELECT 
-                                        mp.id
-                                    FROM 
-                                        MotionPicture mp
-                                    JOIN 
-                                        Location l ON mp.id = l.mpid
-                                    WHERE 
-                                        l.city <> 'Boston'
-                                )
-                            GROUP BY 
-                                mp.id
-                            ORDER BY 
-                                mp.rating DESC
-                            LIMIT 2
-                        ");
-                        $stmt->execute();
-    
-                        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+                                SELECT 
+                                    mp.name AS MovieName, 
+                                    mp.rating AS Rating
+                                FROM 
+                                    MotionPicture mp
+                                JOIN 
+                                    Movie m ON mp.id = m.id
+                                JOIN 
+                                    Genre g ON mp.id = g.mpid
+                                JOIN 
+                                    Location l ON mp.id = l.mpid
+                                WHERE 
+                                    g.genre_name = 'Thriller' AND 
+                                    l.city = 'Boston' AND 
+                                    mp.id NOT IN (
+                                        SELECT DISTINCT mp2.id
+                                        FROM MotionPicture mp2
+                                        JOIN Location l2 ON mp2.id = l2.mpid
+                                        WHERE l2.city <> 'Boston'
+                                    )
+                                GROUP BY mp.id
+                                ORDER BY mp.rating DESC
+                                LIMIT 2
+                            ");
+                            
+                            $stmt->execute();
+        
+                            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
                         if ($result) {
                             echo "<h2>Top 2 Rated Thriller Movies Shot Exclusively in Boston</h2>";
                             echo "<table class='table table-bordered'><thead class='thead-dark'><tr><th>Movie Name</th><th>Rating</th></tr></thead>";
@@ -576,33 +590,30 @@
 
                         else if (isset($_POST['search_marvel_warner'])) {
                             $stmt = $conn->prepare("
-                            SELECT 
-                                DISTINCT People.name AS ActorName, 
-                                MotionPicture.name AS MovieName
+                            SELECT DISTINCT
+                                p.name AS actor_name, 
+                                mp.name AS motion_picture_name
                             FROM 
-                                People
+                                People p
                             JOIN 
-                                Role ON People.id = Role.pid
+                                Role r ON p.id = r.pid
                             JOIN 
-                                MotionPicture ON Role.mpid = MotionPicture.id
+                                MotionPicture mp ON r.mpid = mp.id
                             WHERE 
-                                Role.role_name = 'Actor' 
-                                AND MotionPicture.production IN ('Marvel', 'Warner Bros')
-                                AND People.id IN (
-                                    SELECT 
-                                        People.id 
-                                    FROM 
-                                        People
-                                    JOIN 
-                                        Role ON People.id = Role.pid
-                                    JOIN 
-                                        MotionPicture ON Role.mpid = MotionPicture.id
-                                    GROUP BY 
-                                        People.id
-                                    HAVING 
-                                        COUNT(DISTINCT MotionPicture.production) > 1
-                                );
-                        
+                                r.role_name = 'Actor'
+                                AND mp.production IN ('Marvel', 'Warner Bros')
+                                AND p.id IN (
+                                    SELECT r1.pid
+                                    FROM Role r1
+                                    JOIN MotionPicture mp1 ON r1.mpid = mp1.id
+                                    WHERE mp1.production = 'Marvel' AND r1.role_name = 'Actor'
+                                )
+                                AND p.id IN (
+                                    SELECT r2.pid
+                                    FROM Role r2
+                                    JOIN MotionPicture mp2 ON r2.mpid = mp2.id
+                                    WHERE mp2.production = 'Warner Bros' AND r2.role_name = 'Actor'
+                                );        
                             ");
                             $stmt->execute();
                             
@@ -610,10 +621,10 @@
                             
                             if ($result) {
                                 echo "<h2>Actors in Both Marvel and Warner Bros Productions</h2>";
-                                echo "<table class='table table-bordered'><thead class='thead-dark'><tr><th>Actor Name</th><th>Movie Name</th></tr></thead>";
+                                echo "<table class='table table-bordered'><thead class='thead-dark'><tr><th>Actor Name</th><th>Motion Picture Name</th></tr></thead>";
                                 echo "<tbody>";
                                 foreach($result as $row) {
-                                    echo "<tr><td>".$row["ActorName"]."</td><td>".$row["MovieName"]."</td></tr>";
+                                    echo "<tr><td>".$row["actor_name"]."</td><td>".$row["motion_picture_name"]."</td></tr>";
                                 }
                                 echo "</tbody></table>";
                             } else {
@@ -690,18 +701,26 @@
 
                         else if (isset($_POST['search_actors_with_same_birthday'])) {
                             $stmt = $conn->prepare("
-                                SELECT 
-                                    p1.name AS Actor1, 
-                                    p2.name AS Actor2, 
-                                    p1.dob AS CommonBirthday
-                                FROM 
-                                    People p1
-                                JOIN 
-                                    People p2 ON p1.dob = p2.dob AND p1.id < p2.id
-                                WHERE 
-                                    p1.dob IS NOT NULL
-                                ORDER BY 
-                                    p1.dob
+                            SELECT 
+                                p1.name AS Actor1, 
+                                p2.name AS Actor2, 
+                                p1.dob AS CommonBirthday
+                            FROM 
+                                People p1
+                            JOIN 
+                                People p2 ON p1.dob = p2.dob AND p1.id < p2.id
+                            JOIN 
+                                Role r1 ON p1.id = r1.pid
+                            JOIN 
+                                Role r2 ON p2.id = r2.pid
+                            WHERE 
+                                p1.dob IS NOT NULL
+                                AND r1.role_name = 'Actor'
+                                AND r2.role_name = 'Actor'
+                            GROUP BY 
+                                p1.id, p2.id
+                            ORDER BY 
+                                p1.dob;
                             ");
                             $stmt->execute();
                             
